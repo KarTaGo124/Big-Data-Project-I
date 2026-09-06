@@ -38,9 +38,21 @@ variable "cluster_name" {
 }
 
 variable "bucket_prefix" {
-  description = "Prefijo del bucket de staging"
+  description = "Prefijo del unico bucket del proyecto"
   type        = string
-  default     = "dataproc-staging"
+  default     = "retail-project"
+}
+
+variable "dataset_local_path" {
+  description = "Ruta local del dataset, relativa a esta carpeta de terraform"
+  type        = string
+  default     = "../data/online_retail_II.csv"
+}
+
+variable "dataset_raw_prefix" {
+  description = "Carpeta/prefijo dentro del bucket donde se organiza el dataset crudo"
+  type        = string
+  default     = "raw"
 }
 
 variable "scheduler_service_account_id" {

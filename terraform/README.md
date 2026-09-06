@@ -15,6 +15,8 @@ Levanta con un solo comando el clúster Dataproc del curso: bucket de staging, c
 
 ## Requisitos previos (una vez por persona/máquina)
 
+### macOS/Linux
+
 ```bash
 # 1. Instalar terraform (macOS) — Homebrew ya no tiene la fórmula directa
 #    por el cambio de licencia de HashiCorp, hay que usar su tap oficial
@@ -43,7 +45,49 @@ gcloud projects add-iam-policy-binding TU_PROJECT_ID \
 gcloud projects describe TU_PROJECT_ID --format="value(projectId,projectNumber)"
 ```
 
+### Windows
+
+Desde **Git Bash** (incluido en [Git for Windows](https://git-scm.com/download/win)):
+
+1. **Instalar Terraform** (Windows):
+   - Descarga desde https://www.terraform.io/downloads (elige "Windows" → "amd64")
+   - O usa Chocolatey si lo tienes: `choco install terraform`
+   - Descomprime en una carpeta (ej. `C:\Program Files\HashiCorp\terraform`) y agrega esa carpeta al PATH de Windows
+
+2. **Instalar gcloud CLI** (Windows):
+   - Descarga el instalador desde https://cloud.google.com/sdk/docs/install-sdk#windows
+   - O usa Chocolatey: `choco install google-cloud-sdk`
+   - Luego desde Git Bash:
+   ```bash
+   gcloud init
+   gcloud auth login
+   gcloud auth application-default login
+   ```
+
+3. **Verificar que están en el PATH** (desde Git Bash):
+   ```bash
+   terraform --version
+   gcloud --version
+   ```
+   Si no salen, edita `~/.bashrc` (crea el archivo si no existe) y agrega al final:
+   ```bash
+   export PATH="/c/Program Files/HashiCorp/terraform:$PATH"
+   export PATH="/c/Program Files (x86)/Google/Cloud SDK/bin:$PATH"
+   ```
+   Luego cierra y reabre Git Bash.
+
+4. **Habilitar APIs y permisos** (desde Git Bash o CMD, da igual — los comandos funcionan igual):
+   ```bash
+   gcloud services enable dataproc.googleapis.com cloudscheduler.googleapis.com compute.googleapis.com --project TU_PROJECT_ID
+
+   gcloud projects add-iam-policy-binding TU_PROJECT_ID \
+     --member="serviceAccount:TU_PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+     --role="roles/dataproc.worker"
+   ```
+
 ## Cómo levantarlo
+
+**En Windows, usa Git Bash para todos estos comandos.**
 
 ```bash
 cd terraform

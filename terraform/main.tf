@@ -22,14 +22,21 @@ resource "random_id" "bucket_suffix" {
 }
 
 # ---------------------------------------------------------------------------
-# Bucket de staging para el cluster (debe vivir en la misma region que el
-# cluster para evitar latencia/errores de acceso)
+# Un solo bucket para todo: staging interno de Dataproc (Dataproc crea sus
+# propias subcarpetas ahi automaticamente) + el dataset del proyecto bajo
+# "raw/" (zona cruda del data lake)
 # ---------------------------------------------------------------------------
-resource "google_storage_bucket" "staging" {
+resource "google_storage_bucket" "main" {
   name                        = "${var.bucket_prefix}-${random_id.bucket_suffix.hex}"
   location                    = var.region
   uniform_bucket_level_access = true
   force_destroy               = true
+}
+
+resource "google_storage_bucket_object" "raw_dataset" {
+  name   = "${var.dataset_raw_prefix}/${basename(var.dataset_local_path)}"
+  bucket = google_storage_bucket.main.name
+  source = "${path.module}/${var.dataset_local_path}"
 }
 
 # ---------------------------------------------------------------------------
@@ -42,7 +49,7 @@ resource "google_dataproc_cluster" "cluster" {
   project = var.project_id
 
   cluster_config {
-    staging_bucket = google_storage_bucket.staging.name
+    staging_bucket = google_storage_bucket.main.name
 
     gce_cluster_config {
       zone             = var.zone
