@@ -21,3 +21,6 @@ terraform.tfvars.json
 
 # macOS
 .DS_Store
+
+hadoop-mapreduce/work/*
+!hadoop-mapreduce/work/.gitkeep
