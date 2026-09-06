@@ -1,0 +1,14 @@
+# Copia este archivo a terraform.tfvars (sin ".example") y completa con TUS
+# propios valores. terraform.tfvars esta en .gitignore, asi que nunca se
+# sube al repo -- cada integrante del grupo tiene el suyo, local, en su
+# propia maquina.
+
+project_id = "tu-project-id-de-gcp"
+
+# Todo lo demas ya tiene un default razonable en variables.tf y normalmente
+# no hace falta tocarlo. Descomenta y ajusta solo si necesitas algo distinto,
+# por ejemplo si tu proyecto no tiene capacidad en southamerica-west1-a:
+#
+# region       = "us-west1"
+# zone         = "us-west1-b"
+# cluster_name = "mi-cluster"
