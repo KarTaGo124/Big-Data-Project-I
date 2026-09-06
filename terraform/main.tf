@@ -79,6 +79,18 @@ resource "google_dataproc_cluster" "cluster" {
       enable_http_port_access = true
     }
   }
+
+  # La API de Dataproc siempre agrega automaticamente scopes extra
+  # (devstorage.read_write, logging.write, cloud.useraccounts.readonly) al
+  # que declaramos arriba, y ese campo es ForceNew en el provider -> sin
+  # esto, cada "terraform plan" ve una diferencia eterna contra la config y
+  # quiere destruir/recrear el cluster para siempre (problema conocido del
+  # provider google_dataproc_cluster, no algo que dependa de este codigo).
+  lifecycle {
+    ignore_changes = [
+      cluster_config[0].gce_cluster_config[0].service_account_scopes,
+    ]
+  }
 }
 
 # ---------------------------------------------------------------------------
