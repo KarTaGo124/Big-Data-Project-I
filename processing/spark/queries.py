@@ -189,7 +189,7 @@ def query_12_ticket_promedio(df):
 
 
 def main():
-    spark = SparkSession.builder.master("local[*]").appName("online-retail-queries").getOrCreate()
+    spark = SparkSession.builder.appName("online-retail-queries").getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
 
     df = load_raw(spark)
