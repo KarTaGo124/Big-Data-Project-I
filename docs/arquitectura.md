@@ -2,6 +2,8 @@
 
 Arquitectura del proyecto: fuente de datos → ingesta (batch) → almacenamiento (data lake) → procesamiento distribuido, completamente dentro de Google Cloud Platform.
 
+> Versiones interactivas y pulidas de los 3 diagramas de esta página (para el informe) están en `docs/diagrams/`: `arquitectura-general.html`, `infraestructura-gcp.html` y `pipeline-hadoop-mapreduce.html`. Abrir directamente en el navegador — incluyen tema claro/oscuro y exportación a PNG/SVG.
+
 ## 1. Arquitectura general
 
 ```mermaid
