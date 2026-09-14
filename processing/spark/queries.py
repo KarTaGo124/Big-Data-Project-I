@@ -1,10 +1,12 @@
+import os
 from pathlib import Path
 
 from pyspark.sql import SparkSession, Window
 from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, IntegerType, StringType, StructField, StructType
 
-DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "online_retail_II.csv"
+LOCAL_DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "online_retail_II.csv"
+DATA_PATH = os.environ.get("DATA_PATH", LOCAL_DATA_PATH.as_uri())
 
 
 def print_header(number, title):
@@ -26,7 +28,7 @@ def load_raw(spark):
             StructField("Country", StringType(), True),
         ]
     )
-    return spark.read.option("header", True).schema(schema).csv(str(DATA_PATH))
+    return spark.read.option("header", True).schema(schema).csv(DATA_PATH)
 
 
 def query_01_limpieza(df):
@@ -189,7 +191,7 @@ def query_12_ticket_promedio(df):
 
 
 def main():
-    spark = SparkSession.builder.master("local[*]").appName("online-retail-queries").getOrCreate()
+    spark = SparkSession.builder.appName("online-retail-queries").getOrCreate()
     spark.sparkContext.setLogLevel("ERROR")
 
     df = load_raw(spark)
