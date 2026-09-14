@@ -26,7 +26,7 @@ def load_raw(spark):
             StructField("Country", StringType(), True),
         ]
     )
-    return spark.read.option("header", True).schema(schema).csv(str(DATA_PATH))
+    return spark.read.option("header", True).schema(schema).csv(DATA_PATH.as_uri())
 
 
 def query_01_limpieza(df):
