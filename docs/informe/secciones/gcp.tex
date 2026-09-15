@@ -13,11 +13,53 @@ La arquitectura definida para el proyecto está basada por completo en GCP, e in
 
 \subsubsection*{Diagrama de arquitectura}
 
-\textcolor{red}{\textbf{[REVISAR: falta insertar el diagrama de arquitectura definitivo en este punto. Hay una versión pulida pendiente de aprobación del equipo — ver PR \#12 del repositorio. Mientras tanto, la descripción textual de componentes y la justificación técnica de abajo ya cubren el contenido exigido.]}}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=10mm and 14mm,
+    box/.style={draw, rounded corners, align=center, minimum height=9mm, minimum width=32mm, font=\small, fill=white},
+    arrow/.style={-{Latex[length=2mm]}, thick}
+]
+
+\node[box] (src) {Fuente de datos\\\footnotesize Online Retail II ($\sim$1M registros)};
+\node[box, below=24mm of src] (ingest) {Ingesta batch\\\footnotesize carga a Cloud Storage};
+
+\node[box, below=18mm of ingest, xshift=-34mm] (raw) {\texttt{raw/}\\\footnotesize dataset original};
+\node[box, below=8mm of raw] (input) {\texttt{input/}\\\footnotesize datos preparados};
+\node[box, below=8mm of input] (output) {\texttt{output/}\\\footnotesize resultados};
+
+\node[box, right=34mm of raw] (spark) {Spark\\\footnotesize Polars / Dask / Modin};
+\node[box, below=8mm of spark] (hdfs) {HDFS};
+\node[box, below=8mm of hdfs] (mapreduce) {Hadoop MapReduce};
+
+\begin{scope}[on background layer]
+\node[draw, rounded corners, fit=(raw)(input)(output), inner sep=6mm, label={[font=\small\bfseries]above:Data Lake (Cloud Storage)}] (dlbox) {};
+\node[draw, rounded corners, fit=(spark)(hdfs)(mapreduce), inner sep=6mm, label={[font=\small\bfseries]above:Procesamiento distribuido (Dataproc)}] (procbox) {};
+\node[draw, dashed, rounded corners, fit=(ingest)(dlbox)(procbox), inner sep=10mm, label={[font=\bfseries, yshift=1mm]above:Google Cloud Platform}] (gcpbox) {};
+\end{scope}
+
+\node[box, below=18mm of gcpbox.south] (res) {Informe y resultados finales};
+
+\draw[arrow] (src) -- (ingest);
+\draw[arrow] (ingest) -- (raw.north);
+\draw[arrow] (raw) -- (input);
+\draw[arrow] (input) -- (output);
+\draw[arrow] (raw) -- (spark);
+\draw[arrow] (input) -- (hdfs);
+\draw[arrow] (hdfs) -- (mapreduce);
+\draw[arrow] (mapreduce.east) to[bend left=40] (hdfs.east);
+\draw[arrow] (hdfs) -- (output);
+\draw[arrow] (spark.south) to[bend right=15] (res.north);
+\draw[arrow] (output.east) to[bend left=15] (res.south);
+
+\end{tikzpicture}
+\caption{Diagrama de arquitectura general del proyecto}
+\label{fig:arquitectura}
+\end{figure}
 
 \subsubsection*{Explicación de componentes}
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{p{2.7cm}p{5cm}p{5cm}}
@@ -62,7 +104,7 @@ Este mismo bucket cumple además el rol de \emph{staging bucket} del clúster Da
 
 La Figura \ref{fig:bucket-lista} muestra el bucket \texttt{retail-project-f6e06bc9} ya creado y visible en la consola de Google Cloud Storage del proyecto.
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{../evidencia/bucket-lista.png}
     \caption{Bucket del proyecto en la lista de Cloud Storage}
@@ -71,21 +113,21 @@ La Figura \ref{fig:bucket-lista} muestra el bucket \texttt{retail-project-f6e06b
 
 Las Figuras \ref{fig:bucket-raw}, \ref{fig:bucket-input} y \ref{fig:bucket-output} muestran el contenido real de cada una de las tres carpetas.
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{../evidencia/bucket-raw.png}
     \caption{Carpeta \texttt{raw/}: el dataset original (\texttt{online\_retail\_II.csv}, 95.9 MB)}
     \label{fig:bucket-raw}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{../evidencia/bucket-input.png}
     \caption{Carpeta \texttt{input/}: archivos preparados para Hadoop MapReduce}
     \label{fig:bucket-input}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{../evidencia/bucket-output.png}
     \caption{Carpeta \texttt{output/}: resultados de los tres programas de Hadoop MapReduce}
@@ -106,14 +148,14 @@ Como respaldo de costos, se configuró un job de Cloud Scheduler que apaga el cl
 
 \subsubsection*{Evidencia}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{../evidencia/cluster-running.png}
     \caption{Clúster \texttt{dataproc-cluster} en estado \emph{En ejecución}}
     \label{fig:cluster-running}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{../evidencia/cluster-workers.png}
     \caption{Detalle del clúster: 2 nodos trabajadores confirmados}
