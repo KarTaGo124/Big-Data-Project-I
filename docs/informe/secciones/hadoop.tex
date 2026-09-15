@@ -1,15 +1,15 @@
 \section{Hadoop MapReduce}
 \label{sec:hadoop}
 
-Como parte del proyecto, el grupo ejecutó tres programas incluidos en \texttt{hadoop-mapreduce-examples.jar} sobre el clúster de Dataproc, usando HDFS como sistema de archivos distribuido, tal como exige el enunciado. Se eligieron \texttt{wordmean}, \texttt{wordmedian} y \texttt{secondarysort} —cualquier programa del jar está permitido salvo \texttt{wordcount} y \texttt{grep}— por tener sintaxis simple (\texttt{<input> <output>}, sin argumentos ambiguos) y por poder aplicarse directamente sobre columnas reales del dataset.
+Como parte del proyecto, el grupo ejecutó tres programas incluidos en \texttt{hadoop-mapreduce-examples.jar} sobre el clúster de Dataproc, usando HDFS como sistema de archivos distribuido, tal como exige el enunciado. Se eligieron \texttt{wordmean}, \texttt{wordmedian} y \texttt{secondarysort}, cualquier programa del jar está permitido salvo \texttt{wordcount} y \texttt{grep}, por tener sintaxis simple (\texttt{<input> <output>}, sin argumentos ambiguos) y por poder aplicarse directamente sobre columnas reales del dataset.
 
 \subsection{Preparación de los inputs}
 
 A partir del CSV original se extrajeron dos archivos de texto plano:
 
 \begin{itemize}
-    \item \texttt{descriptions.txt} — una descripción de producto (columna \texttt{Description}) por línea.
-    \item \texttt{customer\_quantity.txt} — pares de valores \texttt{CustomerID} y \texttt{Quantity} separados por un espacio, uno por línea.
+    \item \texttt{descriptions.txt}, una descripción de producto (columna \texttt{Description}) por línea.
+    \item \texttt{customer\_quantity.txt}, pares de valores \texttt{CustomerID} y \texttt{Quantity} separados por un espacio, uno por línea.
 \end{itemize}
 
 Ambos se subieron a \texttt{gs://<bucket>/input/} y de ahí se copiaron a HDFS (\texttt{/retail/}) antes de correr los jobs.
@@ -43,7 +43,7 @@ gcloud dataproc jobs submit hadoop \
   -- <programa> <input_hdfs> <output_hdfs>
 \end{verbatim}
 
-donde \texttt{<programa>} es \texttt{wordmean}, \texttt{wordmedian} o \texttt{secondarysort}; \texttt{<input\_hdfs>} es \texttt{/retail/descriptions.txt} o \texttt{/retail/customer\_quantity.txt} según corresponda; y \texttt{<output\_hdfs>} es \texttt{/retail/<programa>}.
+donde \texttt{<programa>} es \texttt{wordmean}, \texttt{wordmedian} o \texttt{secondarysort}, \texttt{<input\_hdfs>} es \texttt{/retail/descriptions.txt} o \texttt{/retail/customer\_quantity.txt} según corresponda, y \texttt{<output\_hdfs>} es \texttt{/retail/<programa>}.
 
 El resultado de cada job (las particiones \texttt{part-r-00000}, \texttt{part-r-00001}, \ldots generadas por los \emph{reducers}) queda almacenado en HDFS, dentro del clúster, tal como exige el enunciado. Recién después, para poder explorarlo y conservarlo más allá de la vida del clúster, se juntan esas particiones en un solo archivo y se copian a Cloud Storage:
 
@@ -63,7 +63,7 @@ La Figura \ref{fig:dataproc-jobs} muestra los tres jobs completados exitosamente
     \label{fig:dataproc-jobs}
 \end{figure}
 
-\textbf{\texttt{wordmean.txt}} — el programa no imprime la media directamente, sino los contadores con los que se calcula:
+\textbf{\texttt{wordmean.txt}}: el programa no imprime la media directamente, sino los contadores con los que se calcula:
 
 \begin{verbatim}
 count   4664518
@@ -72,9 +72,9 @@ length  24485085
 
 Media = \texttt{length / count} $\approx$ 5.25 caracteres por palabra.
 
-\textbf{\texttt{wordmedian.txt}} — tabla de frecuencia (largo de palabra $\rightarrow$ cantidad de palabras de ese largo). La mediana se obtiene acumulando estos conteos, ordenados por largo, hasta llegar al 50\% del total de palabras.
+\textbf{\texttt{wordmedian.txt}}: tabla de frecuencia (largo de palabra $\rightarrow$ cantidad de palabras de ese largo). La mediana se obtiene acumulando estos conteos, ordenados por largo, hasta llegar al 50\% del total de palabras.
 
-\textbf{\texttt{secondarysort.txt}} — compras agrupadas por \texttt{Customer ID}, ordenadas ascendentemente por \texttt{Quantity} dentro de cada grupo (aproximadamente 7 MB de resultado). Por ejemplo, para el cliente \texttt{12348}:
+\textbf{\texttt{secondarysort.txt}}: compras agrupadas por \texttt{Customer ID}, ordenadas ascendentemente por \texttt{Quantity} dentro de cada grupo (aproximadamente 7 MB de resultado). Por ejemplo, para el cliente \texttt{12348}:
 
 \begin{verbatim}
 12348   1

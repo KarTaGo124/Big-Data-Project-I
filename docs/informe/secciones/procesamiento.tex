@@ -3,7 +3,7 @@
 
 \subsection{Metodología}
 
-Se definió un único conjunto de 12 consultas de negocio, y se implementó exactamente el mismo conjunto en los cuatro frameworks pedidos por el enunciado: Polars, Dask, Modin y Apache Spark. La razón de usar el mismo set de consultas en los cuatro, en vez de un set distinto por framework, es que el objetivo de esta sección es comparar cómo cada herramienta resuelve el mismo problema —no evaluar cuatro análisis de negocio independientes. Cada framework lee el CSV original desde cero y corre el pipeline completo de forma independiente (no reutiliza resultados intermedios de otro framework).
+Se definió un único conjunto de 12 consultas de negocio, y se implementó exactamente el mismo conjunto en los cuatro frameworks pedidos por el enunciado: Polars, Dask, Modin y Apache Spark. La razón de usar el mismo set de consultas en los cuatro, en vez de un set distinto por framework, es que el objetivo de esta sección es comparar cómo cada herramienta resuelve el mismo problema, no evaluar cuatro análisis de negocio independientes. Cada framework lee el CSV original desde cero y corre el pipeline completo de forma independiente (no reutiliza resultados intermedios de otro framework).
 
 \begin{table}[H]
 \centering
@@ -30,7 +30,7 @@ Se definió un único conjunto de 12 consultas de negocio, y se implementó exac
 \label{tab:consultas}
 \end{table}
 
-Las consultas 1 a 4 preparan el dataset (limpieza, deduplicación, transformación, filtrado); las consultas 5 a 12 son las preguntas de negocio propiamente dichas, y se calculan sobre el subconjunto ya limpio de ventas válidas (salvo la consulta 10, que necesita ver también las transacciones canceladas para calcular una tasa).
+Las consultas 1 a 4 preparan el dataset (limpieza, deduplicación, transformación, filtrado), las consultas 5 a 12 son las preguntas de negocio propiamente dichas, y se calculan sobre el subconjunto ya limpio de ventas válidas (salvo la consulta 10, que necesita ver también las transacciones canceladas para calcular una tasa).
 
 \subsection{Polars}
 
@@ -46,19 +46,19 @@ Spark es, de los cuatro, el único que se ejecutó también sobre el clúster re
 
 \subsection{Modin}
 
-Modin se implementó usando \texttt{modin.pandas}, que expone una API prácticamente idéntica a pandas —de hecho, la implementación es casi un calco de la de Dask, quitando las llamadas a \texttt{.compute()}. Por debajo, Modin distribuye el trabajo usando Ray como motor de ejecución. Al importar \texttt{modin.pandas} sin conectarse explícitamente a un clúster Ray existente, Ray arranca automáticamente una instancia local sobre la máquina donde corre el script.
+Modin se implementó usando \texttt{modin.pandas}, que expone una API prácticamente idéntica a pandas, de hecho, la implementación es casi un calco de la de Dask, quitando las llamadas a \texttt{.compute()}. Por debajo, Modin distribuye el trabajo usando Ray como motor de ejecución. Al importar \texttt{modin.pandas} sin conectarse explícitamente a un clúster Ray existente, Ray arranca automáticamente una instancia local sobre la máquina donde corre el script.
 
 \subsection{Dask}
 
-Dask se implementó con \texttt{dask.dataframe}, cuya API está deliberadamente inspirada en pandas. Un detalle técnico relevante: al leer el CSV con un \texttt{blocksize} demasiado grande, Dask particionaba el archivo en una sola partición, lo que anulaba cualquier paralelismo real; se ajustó el \texttt{blocksize} para obtener varias particiones reales. También se agregó \texttt{.persist()} después de las etapas de limpieza y filtrado, para que el pipeline pesado no se recomputara desde cero en cada una de las ocho consultas de negocio restantes (Dask es perezoso por defecto).
+Dask se implementó con \texttt{dask.dataframe}, cuya API está deliberadamente inspirada en pandas. Un detalle técnico relevante: al leer el CSV con un \texttt{blocksize} demasiado grande, Dask particionaba el archivo en una sola partición, lo que anulaba cualquier paralelismo real, se ajustó el \texttt{blocksize} para obtener varias particiones reales. También se agregó \texttt{.persist()} después de las etapas de limpieza y filtrado, para que el pipeline pesado no se recomputara desde cero en cada una de las ocho consultas de negocio restantes (Dask es perezoso por defecto).
 
 \subsection{Resultados y comparación}
 
-Las cuatro implementaciones, corriendo de forma completamente independiente, producen resultados numéricos idénticos entre sí en las 12 consultas —mismo top de productos y clientes, mismo ticket promedio, mismas tasas de cancelación— lo que confirma que las cuatro resuelven correctamente el mismo problema, solo con sintaxis y motor de ejecución distintos. El detalle completo de resultados de negocio se presenta en la Sección \ref{sec:operaciones}.
+Las cuatro implementaciones, corriendo de forma completamente independiente, producen resultados numéricos idénticos entre sí en las 12 consultas, mismo top de productos y clientes, mismo ticket promedio, mismas tasas de cancelación, lo que confirma que las cuatro resuelven correctamente el mismo problema, solo con sintaxis y motor de ejecución distintos. El detalle completo de resultados de negocio se presenta en la Sección \ref{sec:operaciones}.
 
 \subsubsection*{Corrida sobre el clúster real de Dataproc}
 \label{sec:gcp-cluster-run}
 
 Además de validarse en local, los cuatro frameworks se corrieron también sobre el clúster real de Dataproc descrito en la Sección \ref{sec:gcp}, leyendo el dataset directamente desde el bucket. Los cuatro reprodujeron exactamente los mismos resultados que en local. El output completo de cada corrida está disponible en \texttt{docs/evidencia/} (\texttt{dask-cluster-output.txt}, \texttt{modin-cluster-output.txt}, \texttt{polars-cluster-output.txt}, \texttt{spark-cluster-output.txt}).
 
-Vale la pena aclarar que, de los cuatro, solo Spark aprovecha genuinamente los tres nodos del clúster: Dataproc ya trae YARN configurado de fábrica, así que basta con no forzar un \texttt{master} local en el código. Dask y Modin, al no conectarse explícitamente a un scheduler distribuido (Dask) o a un clúster Ray (Modin) montado entre los nodos, corren en el nodo master usando sus propios núcleos —siguen ejecutándose sobre infraestructura de Dataproc, pero sin repartirse entre los tres nodos. Montar un clúster Dask o Ray real entre los tres nodos es posible, pero es trabajo de infraestructura adicional que no aporta valor proporcional al alcance de este proyecto.
+Vale la pena aclarar que, de los cuatro, solo Spark aprovecha genuinamente los tres nodos del clúster: Dataproc ya trae YARN configurado de fábrica, así que basta con no forzar un \texttt{master} local en el código. Dask y Modin, al no conectarse explícitamente a un scheduler distribuido (Dask) o a un clúster Ray (Modin) montado entre los nodos, corren en el nodo master usando sus propios núcleos, siguen ejecutándose sobre infraestructura de Dataproc, pero sin repartirse entre los tres nodos. Montar un clúster Dask o Ray real entre los tres nodos es posible, pero es trabajo de infraestructura adicional que no aporta valor proporcional al alcance de este proyecto.
