@@ -18,7 +18,7 @@ La arquitectura definida para el proyecto está basada por completo en GCP, e in
 \begin{tikzpicture}[
     node distance=10mm and 14mm,
     box/.style={draw, rounded corners, align=center, minimum height=9mm, minimum width=32mm, font=\small, fill=white},
-    arrow/.style={-{Latex[length=2mm]}, thick}
+    arrow/.style={-{Latex[length=2mm]}, thick, rounded corners=2mm}
 ]
 
 \node[box] (src) {Fuente de datos\\\footnotesize Online Retail II ($\sim$1M registros)};
@@ -41,16 +41,15 @@ La arquitectura definida para el proyecto está basada por completo en GCP, e in
 \node[box, below=18mm of gcpbox.south] (res) {Informe y resultados finales};
 
 \draw[arrow] (src) -- (ingest);
-\draw[arrow] (ingest) -- (raw.north);
+\draw[arrow] (ingest.south) -- ++(0,-4mm) -| (raw.north);
 \draw[arrow] (raw) -- (input);
 \draw[arrow] (input) -- (output);
 \draw[arrow] (raw) -- (spark);
 \draw[arrow] (input) -- (hdfs);
 \draw[arrow] (hdfs) -- (mapreduce);
-\draw[arrow] (mapreduce.east) to[bend left=40] (hdfs.east);
-\draw[arrow] (hdfs) -- (output);
-\draw[arrow] (spark.south) to[bend right=15] (res.north);
-\draw[arrow] (output.east) to[bend left=15] (res.south);
+\draw[arrow] (mapreduce) -- (output);
+\draw[arrow] (spark.east) -- ++(6mm,0) |- ($(res.north)+(8mm,0)$);
+\draw[arrow] (output.south) -- ++(0,-4mm) -| ($(res.north)+(-8mm,0)$);
 
 \end{tikzpicture}
 \caption{Diagrama de arquitectura general del proyecto}
