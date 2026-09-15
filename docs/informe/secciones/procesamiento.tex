@@ -5,7 +5,7 @@
 
 Se definió un único conjunto de 12 consultas de negocio, y se implementó exactamente el mismo conjunto en los cuatro frameworks pedidos por el enunciado: Polars, Dask, Modin y Apache Spark. La razón de usar el mismo set de consultas en los cuatro, en vez de un set distinto por framework, es que el objetivo de esta sección es comparar cómo cada herramienta resuelve el mismo problema —no evaluar cuatro análisis de negocio independientes. Cada framework lee el CSV original desde cero y corre el pipeline completo de forma independiente (no reutiliza resultados intermedios de otro framework).
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{clp{7.5cm}}
