@@ -1,0 +1,70 @@
+\section{Hadoop MapReduce}
+\label{sec:hadoop}
+
+Como parte del proyecto, el grupo ejecutó tres programas incluidos en \texttt{hadoop-mapreduce-examples.jar} sobre el clúster de Dataproc, usando HDFS como sistema de archivos distribuido, tal como exige el enunciado. Se eligieron \texttt{wordmean}, \texttt{wordmedian} y \texttt{secondarysort} —cualquier programa del jar está permitido salvo \texttt{wordcount} y \texttt{grep}— por tener sintaxis simple (\texttt{<input> <output>}, sin argumentos ambiguos) y por poder aplicarse directamente sobre columnas reales del dataset.
+
+\subsection{Preparación de los inputs}
+
+A partir del CSV original se extrajeron dos archivos de texto plano:
+
+\begin{itemize}
+    \item \texttt{descriptions.txt} — una descripción de producto (columna \texttt{Description}) por línea.
+    \item \texttt{customer\_quantity.txt} — pares de valores \texttt{CustomerID} y \texttt{Quantity} separados por un espacio, uno por línea.
+\end{itemize}
+
+Ambos se subieron a \texttt{gs://<bucket>/input/} y de ahí se copiaron a HDFS (\texttt{/retail/}) antes de correr los jobs.
+
+\subsection{Los tres programas}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Programa} & \textbf{Objetivo} & \textbf{Input} \\
+\midrule
+\texttt{wordmean} & Largo promedio de palabra & \texttt{descriptions.txt} \\
+\texttt{wordmedian} & Mediana del largo de palabra & \texttt{descriptions.txt} \\
+\texttt{secondarysort} & Agrupar por clave y ordenar por una segunda & \texttt{customer\_quantity.txt} \\
+\bottomrule
+\end{tabular}
+\caption{Programas de \texttt{hadoop-mapreduce-examples.jar} utilizados}
+\end{table}
+
+\texttt{wordmean} y \texttt{wordmedian} dan una idea de la consistencia del texto en el catálogo de productos: en un catálogo de e-commerce con miles de productos distintos, saber si las descripciones son consistentemente cortas o largas es relevante para tareas posteriores de procesamiento de texto (búsqueda, categorización). \texttt{secondarysort} agrupa todas las compras de cada cliente (\texttt{Customer ID}) y las ordena internamente por cantidad (\texttt{Quantity}), lo que permite ver, por cliente, si sus compras son consistentemente pequeñas o si tiene algunos pedidos grandes puntuales. Este último programa demuestra además el patrón de \emph{secondary sort} de MapReduce: agrupar por una clave mientras se ordena por una segunda dentro de cada grupo, algo que requiere una lógica de partición/orden compuesta y no es trivial de lograr con un \texttt{reduce} simple.
+
+Cada job se envió mediante \texttt{gcloud dataproc jobs submit hadoop}, la forma nativa de correr jobs en Dataproc, que hace \emph{polling} del estado del job vía la API sin depender de una conexión SSH persistente al clúster. Al terminar cada job, se usó \texttt{hadoop fs -getmerge} para juntar las particiones de resultado (\texttt{part-r-00000}, \texttt{part-r-00001}, \ldots) en un solo archivo legible, que se subió de vuelta a \texttt{gs://<bucket>/output/}.
+
+\subsection{Evidencia y resultados}
+
+La Figura \ref{fig:dataproc-jobs} muestra los tres jobs completados exitosamente sobre el clúster.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{../evidencia/dataproc-jobs-completados.png}
+    \caption{Los tres jobs de Hadoop MapReduce en estado \emph{Completado}}
+    \label{fig:dataproc-jobs}
+\end{figure}
+
+\textbf{\texttt{wordmean.txt}} — el programa no imprime la media directamente, sino los contadores con los que se calcula:
+
+\begin{verbatim}
+count   4664518
+length  24485085
+\end{verbatim}
+
+Media = \texttt{length / count} $\approx$ 5.25 caracteres por palabra.
+
+\textbf{\texttt{wordmedian.txt}} — tabla de frecuencia (largo de palabra $\rightarrow$ cantidad de palabras de ese largo). La mediana se obtiene acumulando estos conteos, ordenados por largo, hasta llegar al 50\% del total de palabras.
+
+\textbf{\texttt{secondarysort.txt}} — compras agrupadas por \texttt{Customer ID}, ordenadas ascendentemente por \texttt{Quantity} dentro de cada grupo (aproximadamente 7 MB de resultado). Por ejemplo, para el cliente \texttt{12348}:
+
+\begin{verbatim}
+12348   1
+12348   1
+12348   1
+12348   6
+12348   12
+...
+\end{verbatim}
+
+Estos tres resultados fueron reproducidos de forma independiente sobre un clúster Dataproc real, obteniendo valores idénticos a los documentados originalmente por el equipo (ver \texttt{hadoop-mapreduce/README.md}), lo que confirma que el pipeline es completamente reproducible.

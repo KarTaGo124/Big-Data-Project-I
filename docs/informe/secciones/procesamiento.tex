@@ -1,0 +1,64 @@
+\section{Procesamiento distribuido}
+\label{sec:procesamiento}
+
+\subsection{Metodología}
+
+Se definió un único conjunto de 12 consultas de negocio, y se implementó exactamente el mismo conjunto en los cuatro frameworks pedidos por el enunciado: Polars, Dask, Modin y Apache Spark. La razón de usar el mismo set de consultas en los cuatro, en vez de un set distinto por framework, es que el objetivo de esta sección es comparar cómo cada herramienta resuelve el mismo problema —no evaluar cuatro análisis de negocio independientes. Cada framework lee el CSV original desde cero y corre el pipeline completo de forma independiente (no reutiliza resultados intermedios de otro framework).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{clp{7.5cm}}
+\toprule
+\textbf{\#} & \textbf{Categoría(s)} & \textbf{Consulta} \\
+\midrule
+1 & Limpieza & Eliminar filas con \texttt{Description} nula o \texttt{Price} $\leq$ 0 \\
+2 & Duplicados & Detectar y eliminar filas exactamente duplicadas \\
+3 & Transformación & Crear \texttt{TotalPrice}, parsear fecha, derivar \texttt{Year}/\texttt{Month}, \texttt{IsCancelled} \\
+4 & Filtrado & Quedarse solo con ventas válidas (cantidad y precio positivos, no canceladas) \\
+5 & Agrupación + Agregación & Top 10 productos por revenue total \\
+6 & Agrupación + Agregación & Top 10 productos por unidades vendidas \\
+7 & Agrupación + Ordenamiento & Top 10 clientes por gasto total \\
+8 & Agrupación + Ordenamiento & Revenue y ticket promedio por país (top 10) \\
+9 & Métrica temporal & Revenue mensual y variación \% mes a mes \\
+10 & Métrica + Filtrado & Tasa de cancelación por país (top 10) \\
+11 & Agrupación + Métrica & Segmentación de clientes en 3 tiers de gasto \\
+12 & Métrica & Ticket promedio (AOV) global y su evolución mensual \\
+\bottomrule
+\end{tabular}
+\caption{Las 12 consultas implementadas en cada uno de los 4 frameworks}
+\label{tab:consultas}
+\end{table}
+
+Las consultas 1 a 4 preparan el dataset (limpieza, deduplicación, transformación, filtrado); las consultas 5 a 12 son las preguntas de negocio propiamente dichas, y se calculan sobre el subconjunto ya limpio de ventas válidas (salvo la consulta 10, que necesita ver también las transacciones canceladas para calcular una tasa).
+
+\subsection{Polars}
+
+Polars se implementó usando su API de expresiones (\texttt{with\_columns}, \texttt{filter}, \texttt{group\_by().agg()}), en modo eager. A diferencia de los otros tres frameworks, Polars no tiene ningún modo distribuido multi-máquina en su versión de código abierto: es una librería de una sola máquina por diseño, que paraleliza internamente entre los núcleos del procesador mediante su motor en Rust. Esto no es una limitación del proyecto: para consultas de este tamaño (~1 millón de filas), Polars resultó ser, en la práctica, el más simple de implementar y uno de los más rápidos localmente.
+
+Se usó \texttt{qcut} para la segmentación de clientes (consulta 11) y \texttt{pct\_change} para la variación mensual (consulta 9), ambos disponibles de forma nativa en la API de Polars.
+
+\subsection{Apache Spark}
+
+Spark se implementó con la API de DataFrame (\texttt{groupBy().agg()}, funciones de \texttt{pyspark.sql.functions}), usando una función de ventana (\texttt{Window} + \texttt{lag}) para la variación mensual y \texttt{approxQuantile} para la segmentación de clientes, ya que Spark no tiene un equivalente directo a \texttt{qcut}.
+
+Spark es, de los cuatro, el único que se ejecutó también sobre el clúster real de Dataproc en modo genuinamente distribuido (ver Sección \ref{sec:gcp-cluster-run}): al correrlo con \texttt{spark-submit} sin forzar un \texttt{master} local, el job se somete a YARN y se reparte entre el nodo master y los dos workers.
+
+\subsection{Modin}
+
+Modin se implementó usando \texttt{modin.pandas}, que expone una API prácticamente idéntica a pandas —de hecho, la implementación es casi un calco de la de Dask, quitando las llamadas a \texttt{.compute()}. Por debajo, Modin distribuye el trabajo usando Ray como motor de ejecución. Al importar \texttt{modin.pandas} sin conectarse explícitamente a un clúster Ray existente, Ray arranca automáticamente una instancia local sobre la máquina donde corre el script.
+
+\subsection{Dask}
+
+Dask se implementó con \texttt{dask.dataframe}, cuya API está deliberadamente inspirada en pandas. Un detalle técnico relevante: al leer el CSV con un \texttt{blocksize} demasiado grande, Dask particionaba el archivo en una sola partición, lo que anulaba cualquier paralelismo real; se ajustó el \texttt{blocksize} para obtener varias particiones reales. También se agregó \texttt{.persist()} después de las etapas de limpieza y filtrado, para que el pipeline pesado no se recomputara desde cero en cada una de las ocho consultas de negocio restantes (Dask es perezoso por defecto).
+
+\subsection{Resultados y comparación}
+
+Las cuatro implementaciones, corriendo de forma completamente independiente, producen resultados numéricos idénticos entre sí en las 12 consultas —mismo top de productos y clientes, mismo ticket promedio, mismas tasas de cancelación— lo que confirma que las cuatro resuelven correctamente el mismo problema, solo con sintaxis y motor de ejecución distintos. El detalle completo de resultados de negocio se presenta en la Sección \ref{sec:operaciones}.
+
+\subsubsection*{Corrida sobre el clúster real de Dataproc}
+\label{sec:gcp-cluster-run}
+
+Además de validarse en local, los cuatro frameworks se corrieron también sobre el clúster real de Dataproc descrito en la Sección \ref{sec:gcp}, leyendo el dataset directamente desde el bucket. Los cuatro reprodujeron exactamente los mismos resultados que en local. El output completo de cada corrida está disponible en \texttt{docs/evidencia/} (\texttt{dask-cluster-output.txt}, \texttt{modin-cluster-output.txt}, \texttt{polars-cluster-output.txt}, \texttt{spark-cluster-output.txt}).
+
+Vale la pena aclarar que, de los cuatro, solo Spark aprovecha genuinamente los tres nodos del clúster: Dataproc ya trae YARN configurado de fábrica, así que basta con no forzar un \texttt{master} local en el código. Dask y Modin, al no conectarse explícitamente a un scheduler distribuido (Dask) o a un clúster Ray (Modin) montado entre los nodos, corren en el nodo master usando sus propios núcleos —siguen ejecutándose sobre infraestructura de Dataproc, pero sin repartirse entre los tres nodos. Montar un clúster Dask o Ray real entre los tres nodos es posible, pero es trabajo de infraestructura adicional que no aporta valor proporcional al alcance de este proyecto.

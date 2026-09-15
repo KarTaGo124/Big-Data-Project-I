@@ -1,0 +1,145 @@
+\section{Operaciones}
+\label{sec:operaciones}
+
+Esta sección detalla, con resultados concretos, las operaciones ejecutadas sobre los datos en las 12 consultas descritas en la Sección \ref{sec:procesamiento}. Todos los valores presentados aquí son idénticos en los cuatro frameworks.
+
+\subsection{Operaciones tipo CRUD sobre el dataset}
+
+Aunque el dataset es un archivo estático (no una base de datos transaccional), el pipeline aplica sobre él las cuatro operaciones clásicas de CRUD en un sentido batch:
+
+\begin{itemize}
+    \item \textbf{Create:} se crean columnas derivadas que no existen en el CSV original: \texttt{TotalPrice} (\texttt{Quantity} $\times$ \texttt{Price}), \texttt{Year}, \texttt{Month} e \texttt{IsCancelled} (booleano, a partir del prefijo \texttt{C} en \texttt{Invoice}).
+    \item \textbf{Read:} lectura del CSV completo con un esquema de tipos explícito por columna, para evitar inferencias erróneas de tipo.
+    \item \textbf{Update:} \texttt{InvoiceDate} se convierte de texto a tipo fecha-hora real, habilitando operaciones temporales (\texttt{Year}, \texttt{Month}) que no son posibles sobre una columna de texto.
+    \item \textbf{Delete:} eliminación de filas duplicadas exactas y de filas que no representan ventas válidas (\texttt{Description} nula, \texttt{Price} $\leq$ 0, cancelaciones).
+\end{itemize}
+
+\subsection{Validación y limpieza}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+\textbf{Etapa} & \textbf{Filas antes} & \textbf{Filas después} \\
+\midrule
+Limpieza (\texttt{Description} nula o \texttt{Price} $\leq$ 0) & 1{,}067{,}371 & 1{,}061{,}164 \\
+Eliminación de duplicados exactos & 1{,}061{,}164 & 1{,}027{,}017 \\
+Filtrado de ventas válidas & 1{,}027{,}017 & 1{,}007{,}913 \\
+\bottomrule
+\end{tabular}
+\caption{Efecto de cada etapa de validación sobre el número de filas}
+\end{table}
+
+En total, de las 1{,}067{,}371 filas originales, 1{,}007{,}913 (94.4\%) corresponden a ventas efectivamente válidas. El 5.6\% restante corresponde a registros basura (precio nulo o cero), duplicados exactos, y transacciones canceladas.
+
+\subsection{Agrupaciones y agregaciones}
+
+\subsubsection*{Top 10 productos por revenue}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lr}
+\toprule
+\textbf{Producto} & \textbf{Revenue (£)} \\
+\midrule
+Manual & 339{,}241.29 \\
+REGENCY CAKESTAND 3 TIER & 330{,}590.32 \\
+DOTCOM POSTAGE & 309{,}854.11 \\
+WHITE HANGING HEART T-LIGHT HOLDER & 260{,}990.22 \\
+PAPER CRAFT, LITTLE BIRDIE & 168{,}469.60 \\
+PARTY BUNTING & 148{,}318.28 \\
+JUMBO BAG RED RETROSPOT & 148{,}073.47 \\
+ASSORTED COLOUR BIRD ORNAMENT & 129{,}324.49 \\
+POSTAGE & 125{,}682.42 \\
+PAPER CHAIN KIT 50'S CHRISTMAS & 117{,}760.29 \\
+\bottomrule
+\end{tabular}
+\caption{Top 10 productos por revenue total}
+\end{table}
+
+Es interesante notar que dos de las diez primeras filas (\texttt{Manual} y \texttt{DOTCOM POSTAGE}/\texttt{POSTAGE}) no son productos reales, sino líneas contables internas del negocio (ajustes manuales y cargos de envío). Esto es, en sí mismo, un hallazgo de calidad de datos: el dataset original no separa productos de conceptos administrativos, algo a tener en cuenta si se quisiera refinar aún más la limpieza.
+
+\subsubsection*{Top 10 clientes por gasto total}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lr}
+\toprule
+\textbf{Customer ID} & \textbf{Gasto total (£)} \\
+\midrule
+18102.0 & 580{,}987.04 \\
+14646.0 & 528{,}602.52 \\
+14156.0 & 313{,}437.62 \\
+14911.0 & 291{,}420.81 \\
+17450.0 & 244{,}784.25 \\
+13694.0 & 195{,}640.69 \\
+17511.0 & 172{,}132.87 \\
+16446.0 & 168{,}472.50 \\
+16684.0 & 147{,}142.77 \\
+12415.0 & 144{,}458.37 \\
+\bottomrule
+\end{tabular}
+\caption{Top 10 clientes por gasto total}
+\end{table}
+
+\subsubsection*{Revenue y ticket promedio por país}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{País} & \textbf{Revenue (£)} & \textbf{Facturas} & \textbf{Ticket promedio (£)} \\
+\midrule
+United Kingdom & 17{,}410{,}196.12 & 36{,}535 & 476.53 \\
+EIRE & 658{,}767.31 & 626 & 1{,}052.34 \\
+Netherlands & 554{,}038.09 & 228 & 2{,}429.99 \\
+Germany & 425{,}019.71 & 789 & 538.68 \\
+France & 350{,}456.09 & 622 & 563.43 \\
+Australia & 169{,}283.46 & 95 & 1{,}781.93 \\
+Spain & 108{,}332.49 & 154 & 703.46 \\
+Switzerland & 100{,}685.59 & 93 & 1{,}082.64 \\
+Sweden & 91{,}869.82 & 105 & 874.95 \\
+Denmark & 68{,}580.69 & 43 & 1{,}594.90 \\
+\bottomrule
+\end{tabular}
+\caption{Top 10 países por revenue, con ticket promedio}
+\end{table}
+
+El Reino Unido concentra la gran mayoría de las transacciones (36{,}535 facturas) pero con el ticket promedio más bajo del top 10; en contraste, Países Bajos tiene apenas 228 facturas pero el ticket promedio más alto (£2{,}429.99), lo que sugiere clientes mayoristas con pedidos grandes y poco frecuentes.
+
+\subsection{Métricas de negocio}
+
+\subsubsection*{Tasa de cancelación por país}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{País} & \textbf{Total} & \textbf{Canceladas} & \textbf{Tasa} \\
+\midrule
+USA & 535 & 126 & 23.55\% \\
+Japan & 565 & 97 & 17.17\% \\
+Czech Republic & 30 & 5 & 16.67\% \\
+Korea & 63 & 10 & 15.87\% \\
+United Arab Emirates & 500 & 33 & 6.60\% \\
+Nigeria & 32 & 2 & 6.25\% \\
+Channel Islands & 1{,}646 & 95 & 5.77\% \\
+Malta & 299 & 17 & 5.69\% \\
+Australia & 1{,}887 & 98 & 5.19\% \\
+Germany & 17{,}331 & 899 & 5.19\% \\
+\bottomrule
+\end{tabular}
+\caption{Top 10 países con mayor tasa de cancelación (mínimo 30 transacciones)}
+\end{table}
+
+\subsubsection*{Segmentación de clientes por gasto}
+
+Se segmentaron los 5{,}942 clientes únicos en tres tiers de gasto total (bajo, medio, alto) usando terciles, resultando en aproximadamente 1{,}960 clientes por tier —una distribución equilibrada, como corresponde a una segmentación por terciles.
+
+\subsubsection*{Ticket promedio (AOV) global y su evolución}
+
+El ticket promedio global (AOV) sobre las ventas válidas es de \textbf{£510.92}. Al observar su evolución mensual junto con el revenue mensual (consulta 9), se aprecia un patrón estacional claro: los meses de noviembre de cada año (previos a la temporada navideña) concentran los picos más altos de revenue —por ejemplo, noviembre de 2011 alcanzó £1{,}503{,}867 (+30.6\% respecto al mes anterior)— mientras que diciembre cae abruptamente una vez pasada la fecha límite de envíos para navidad.

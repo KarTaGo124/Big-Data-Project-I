@@ -1,0 +1,78 @@
+\section{Dataset}
+
+\subsection{Origen}
+
+El dataset utilizado es \textbf{Online Retail II}, publicado en el repositorio UCI Machine Learning Repository (donado en 2019 por Daqing Chen, DOI 10.24432/C5CG6D). Contiene transacciones reales de venta de un minorista en línea del Reino Unido especializado en artículos de regalo únicos, comprados en su mayoría por otros negocios (mayoristas). Cubre el periodo del 1 de diciembre de 2009 al 9 de diciembre de 2011, es decir, dos años fiscales completos.
+
+El archivo original se distribuye en formato Excel con dos hojas (\texttt{Year 2009-2010} y \texttt{Year 2010-2011}); para este proyecto se utiliza la versión combinada en un único archivo CSV (\texttt{data/online\_retail\_II.csv}).
+
+Se eligió este dataset por tres razones concretas: tiene contexto real de negocio (retail / e-commerce), su volumen supera cómodamente el mínimo de 500{,}000 filas pedido por el enunciado, y —a diferencia de un dataset ya limpio— presenta problemas de calidad de datos genuinos, lo que da material real para las tareas de limpieza, deduplicación y transformación que exige la Sección 4 del proyecto.
+
+\subsection{Estructura}
+
+\begin{itemize}
+    \item \textbf{Formato:} CSV tabular, un registro por línea de producto dentro de una factura.
+    \item \textbf{Filas:} 1{,}067{,}371 registros.
+    \item \textbf{Columnas:} 8.
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Variable} & \textbf{Tipo} & \textbf{Descripción} \\
+\midrule
+\texttt{Invoice} & texto & Número de factura. Prefijo \texttt{C} indica cancelación/devolución. \\
+\texttt{StockCode} & texto & Código identificador del producto. \\
+\texttt{Description} & texto & Nombre/descripción del producto. \\
+\texttt{Quantity} & entero & Cantidad de unidades. Puede ser negativa (devoluciones). \\
+\texttt{InvoiceDate} & fecha-hora & Fecha y hora de la transacción. \\
+\texttt{Price} & decimal & Precio unitario (libras esterlinas, GBP). \\
+\texttt{Customer ID} & numérico & Identificador del cliente. Puede ser nulo. \\
+\texttt{Country} & texto & País donde se registró la transacción. \\
+\bottomrule
+\end{tabular}
+\caption{Variables principales del dataset}
+\end{table}
+
+\subsection{Hallazgos de la exploración}
+
+Antes de implementar cualquier consulta, se realizó una exploración completa del dataset (ver \texttt{notebooks/exploracion.ipynb}) para entender qué tan ``sucio'' es en la práctica:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+\textbf{Hallazgo} & \textbf{Cantidad} & \textbf{\%} \\
+\midrule
+Filas totales & 1{,}067{,}371 & 100\% \\
+\texttt{Customer ID} nulo & 243{,}007 & 22.77\% \\
+\texttt{Description} nula & 4{,}382 & 0.41\% \\
+Filas duplicadas exactas & 34{,}335 & 3.22\% \\
+Facturas canceladas (prefijo \texttt{C}) & 19{,}494 & --- \\
+\texttt{Quantity} negativa & 22{,}950 & 2.15\% \\
+\texttt{Price} $\leq$ 0 & 6{,}207 & 0.58\% \\
+Países distintos & 43 & --- \\
+Reino Unido (\% del total) & 981{,}330 & 91.94\% \\
+Facturas únicas (\texttt{Invoice}) & 53{,}628 & --- \\
+Clientes únicos (\texttt{Customer ID}) & 5{,}942 & --- \\
+Productos únicos (\texttt{StockCode}) & 5{,}305 & --- \\
+\bottomrule
+\end{tabular}
+\caption{Hallazgos de calidad de datos sobre el dataset completo}
+\end{table}
+
+El rango temporal cubierto va de 2009-12-01 a 2011-12-09.
+
+Estos hallazgos justifican directamente la Sección 4 del proyecto: casi un cuarto de las filas no tiene cliente asociado, un 3.22\% del dataset son filas duplicadas exactas, y hay filas con precio negativo o cero que no representan ventas reales. Todo esto se trata explícitamente en las 12 consultas implementadas por cada framework (ver Sección \ref{sec:procesamiento}).
+
+\subsection{Métricas de negocio (vista preliminar)}
+
+Sobre el subconjunto de transacciones con \texttt{Quantity} positiva (ventas efectivas, sin cancelaciones):
+
+\begin{itemize}
+    \item \textbf{Revenue total:} £20{,}814{,}291.998
+    \item \textbf{Ticket promedio por factura:} £359.65
+    \item \textbf{Producto más vendido por unidades:} \texttt{WORLD WAR 2 GLIDERS ASSTD DESIGNS} (108{,}545 unidades)
+    \item \textbf{Cliente con mayor gasto acumulado:} \texttt{18102.0} (£598{,}215.22)
+\end{itemize}
