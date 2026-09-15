@@ -48,8 +48,13 @@ La arquitectura definida para el proyecto está basada por completo en GCP, e in
 \draw[arrow] (input) -- (hdfs);
 \draw[arrow] (hdfs) -- (mapreduce);
 \draw[arrow] (mapreduce) -- (output);
-\draw[arrow] (spark.east) -- ++(6mm,0) |- ($(res.north)+(8mm,0)$);
-\draw[arrow] (output.south) -- ++(0,-4mm) -| ($(res.north)+(-8mm,0)$);
+\coordinate (railY) at ($(gcpbox.south)+(0,-9mm)$);
+\coordinate (sparkExitX) at ($(gcpbox.east)+(6mm,0)$);
+\coordinate (resInR) at ($(res.north)+(8mm,0)$);
+\coordinate (resInL) at ($(res.north)+(-8mm,0)$);
+
+\draw[arrow] (spark.east) -- (sparkExitX |- spark.east) -- (sparkExitX |- railY) -- (resInR |- railY) -- (resInR);
+\draw[arrow] (output.south) -- (output.south |- railY) -- (resInL |- railY) -- (resInL);
 
 \end{tikzpicture}
 \caption{Diagrama de arquitectura general del proyecto}
