@@ -32,7 +32,25 @@ Ambos se subieron a \texttt{gs://<bucket>/input/} y de ahí se copiaron a HDFS (
 
 \texttt{wordmean} y \texttt{wordmedian} dan una idea de la consistencia del texto en el catálogo de productos: en un catálogo de e-commerce con miles de productos distintos, saber si las descripciones son consistentemente cortas o largas es relevante para tareas posteriores de procesamiento de texto (búsqueda, categorización). \texttt{secondarysort} agrupa todas las compras de cada cliente (\texttt{Customer ID}) y las ordena internamente por cantidad (\texttt{Quantity}), lo que permite ver, por cliente, si sus compras son consistentemente pequeñas o si tiene algunos pedidos grandes puntuales. Este último programa demuestra además el patrón de \emph{secondary sort} de MapReduce: agrupar por una clave mientras se ordena por una segunda dentro de cada grupo, algo que requiere una lógica de partición/orden compuesta y no es trivial de lograr con un \texttt{reduce} simple.
 
-Cada job se envió mediante \texttt{gcloud dataproc jobs submit hadoop}, la forma nativa de correr jobs en Dataproc, que hace \emph{polling} del estado del job vía la API sin depender de una conexión SSH persistente al clúster. Al terminar cada job, se usó \texttt{hadoop fs -getmerge} para juntar las particiones de resultado (\texttt{part-r-00000}, \texttt{part-r-00001}, \ldots) en un solo archivo legible, que se subió de vuelta a \texttt{gs://<bucket>/output/}.
+\subsection{Comando ejecutado}
+
+Cada job se envió mediante \texttt{gcloud dataproc jobs submit hadoop}, la forma nativa de correr jobs en Dataproc, que hace \emph{polling} del estado del job vía la API sin depender de una conexión SSH persistente al clúster. El comando exacto ejecutado para cada uno de los tres programas fue:
+
+\begin{verbatim}
+gcloud dataproc jobs submit hadoop \
+  --cluster=dataproc-cluster --region=southamerica-west1 \
+  --jar=file:///usr/lib/hadoop-mapreduce/hadoop-mapreduce-examples.jar \
+  -- <programa> <input_hdfs> <output_hdfs>
+\end{verbatim}
+
+donde \texttt{<programa>} es \texttt{wordmean}, \texttt{wordmedian} o \texttt{secondarysort}; \texttt{<input\_hdfs>} es \texttt{/retail/descriptions.txt} o \texttt{/retail/customer\_quantity.txt} según corresponda; y \texttt{<output\_hdfs>} es \texttt{/retail/<programa>}.
+
+El resultado de cada job (las particiones \texttt{part-r-00000}, \texttt{part-r-00001}, \ldots generadas por los \emph{reducers}) queda almacenado en HDFS, dentro del clúster, tal como exige el enunciado. Recién después, para poder explorarlo y conservarlo más allá de la vida del clúster, se juntan esas particiones en un solo archivo y se copian a Cloud Storage:
+
+\begin{verbatim}
+hadoop fs -getmerge /retail/<programa> /tmp/<programa>.txt
+gsutil cp /tmp/<programa>.txt gs://<bucket>/output/<programa>.txt
+\end{verbatim}
 
 \subsection{Evidencia y resultados}
 

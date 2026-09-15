@@ -7,6 +7,45 @@ La arquitectura del proyecto sigue el flujo estándar de un pipeline de Big Data
 
 Toda la infraestructura —el bucket y el clúster— se define como código mediante Terraform (\texttt{terraform/main.tf}), lo que permite recrearla o destruirla de forma reproducible con un solo comando, sin pasos manuales en la consola.
 
+\subsection{Diseño de Arquitectura Big Data}
+
+La arquitectura definida para el proyecto está basada por completo en GCP, e incluye los cuatro componentes pedidos: fuente de datos (\emph{Online Retail II}), ingesta batch (carga única del dataset a Cloud Storage), almacenamiento (data lake en tres zonas dentro de un bucket de Cloud Storage) y procesamiento distribuido (clúster Dataproc, detallado en la Sección \ref{sec:procesamiento}).
+
+\subsubsection*{Diagrama de arquitectura}
+
+\textcolor{red}{\textbf{[REVISAR: falta insertar el diagrama de arquitectura definitivo en este punto. Hay una versión pulida pendiente de aprobación del equipo — ver PR \#12 del repositorio. Mientras tanto, la descripción textual de componentes y la justificación técnica de abajo ya cubren el contenido exigido.]}}
+
+\subsubsection*{Explicación de componentes}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{2.7cm}p{5cm}p{5cm}}
+\toprule
+\textbf{Componente} & \textbf{Qué es} & \textbf{Por qué está ahí} \\
+\midrule
+Fuente de datos & \emph{Online Retail II} — transacciones de e-commerce retail (Reino Unido), $\sim$1.06M filas & Dataset con contexto real de negocio y volumen suficiente para justificar procesamiento distribuido \\
+\addlinespace
+Ingesta (batch) & Carga del dataset completo a Cloud Storage & Es batch, no streaming, porque el dataset es un histórico fijo, no un flujo continuo de eventos \\
+\addlinespace
+Almacenamiento — Data Lake & Un bucket de Cloud Storage organizado en 3 zonas (\texttt{raw/}, \texttt{input/}, \texttt{output/}) & Cloud Storage separa cómputo de almacenamiento; las 3 zonas simulan las etapas típicas de un data lake: cruda, preparada, y resultados \\
+\addlinespace
+Procesamiento distribuido & Clúster Dataproc (1 master + 2 workers) corriendo Spark, Polars/Dask/Modin, y HDFS + Hadoop MapReduce & Dataproc administra Spark, Hadoop y HDFS de forma nativa sobre GCP, con el conector a Cloud Storage integrado \\
+\bottomrule
+\end{tabular}
+\caption{Explicación de los componentes de la arquitectura}
+\end{table}
+
+\subsubsection*{Justificación técnica}
+
+\begin{itemize}
+    \item \textbf{GCP + Dataproc:} Dataproc integra Spark, Hadoop y HDFS con el conector a Cloud Storage ya configurado, sin tener que instalar ni administrar cada pieza por separado.
+    \item \textbf{Un solo bucket:} cumple dos roles (staging del clúster y data lake del proyecto) organizados por carpetas — separarlo en dos buckets no aporta ningún beneficio funcional distinto para el tamaño de este proyecto.
+    \item \textbf{Hardware del clúster:} \texttt{n4-standard-2} (2 vCPU, 8 GB RAM) $\times$ 3 nodos (1 master + 2 workers), con disco \texttt{hyperdisk-balanced} de 100 GB.
+    \item \textbf{Batch, no streaming:} el dataset es un archivo histórico cerrado; no llegan registros nuevos en tiempo real.
+    \item \textbf{Terraform:} toda la infraestructura se define como código y se provisiona o destruye de forma reproducible, sin pasos manuales — ver \texttt{terraform/README.md}.
+\end{itemize}
+
 \subsection{Almacenamiento: bucket de Cloud Storage}
 
 Se implementó un único bucket de Cloud Storage, organizado en tres carpetas que representan las etapas típicas de un data lake:
