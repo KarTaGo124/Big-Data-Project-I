@@ -90,9 +90,9 @@ top10 = resultado.nlargest(10)
 
 \subsection{Resultados y comparación}
 
-Las cuatro implementaciones, corriendo de forma completamente independiente, producen resultados numéricos idénticos entre sí en las 12 consultas, mismo top de productos y clientes, mismo ticket promedio, mismas tasas de cancelación, lo que confirma que las cuatro resuelven correctamente el mismo problema, solo con sintaxis y motor de ejecución distintos. El detalle completo de resultados de negocio se presenta en la Sección \ref{sec:operaciones}.
+Las cuatro implementaciones, corriendo de forma completamente independiente, producen resultados consistentes entre sí en las 12 consultas: mismo top de productos y clientes, mismo ticket promedio, mismas tasas de cancelación. La única excepción es la consulta 11 (segmentación de clientes), donde Polars ubica a un cliente en un tier distinto al de los otros tres frameworks, el detalle de esa diferencia puntual se explica en la Sección \ref{sec:operaciones}. Fuera de ese caso, las cuatro coinciden exactamente, lo que confirma que resuelven correctamente el mismo problema, solo con sintaxis y motor de ejecución distintos.
 
-La Tabla \ref{tab:cobertura} muestra explícitamente que las 12 consultas de la Tabla \ref{tab:consultas} fueron implementadas y ejecutadas con éxito en los 4 frameworks, y que las 4 coincidieron en el resultado numérico de cada una.
+La Tabla \ref{tab:cobertura} muestra que las 12 consultas de la Tabla \ref{tab:consultas} fueron implementadas y ejecutadas con éxito en los 4 frameworks, con resultado numérico coincidente en 11 de las 12 (la excepción es la consulta 11, ver Sección \ref{sec:operaciones}).
 
 \begin{table}[H]
 \centering
@@ -111,13 +111,15 @@ La Tabla \ref{tab:cobertura} muestra explícitamente que las 12 consultas de la 
 8 & Revenue y ticket por país & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 9 & Revenue mensual y variación & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 10 & Tasa de cancelación por país & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
-11 & Segmentación de clientes & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+11 & Segmentación de clientes & $\checkmark^{\ast}$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 12 & Ticket promedio (AOV) & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 \bottomrule
 \end{tabular}
-\caption{Cobertura de las 12 consultas por framework: las 4 columnas coinciden en el resultado numérico de cada fila}
+\caption{Cobertura de las 12 consultas por framework, implementadas y ejecutadas con éxito en los 4, con resultado numérico coincidente en 11 de las 12 filas}
 \label{tab:cobertura}
 \end{table}
+
+{\footnotesize $\ast$Polars ubica a un cliente en un tier de gasto distinto al de los otros tres en la consulta 11, ver el detalle en la Sección \ref{sec:operaciones}.}
 
 \subsubsection*{Corrida sobre el clúster real de Dataproc}
 \label{sec:gcp-cluster-run}

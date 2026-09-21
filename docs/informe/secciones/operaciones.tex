@@ -1,7 +1,7 @@
 \section{Operaciones}
 \label{sec:operaciones}
 
-Esta sección detalla, con resultados concretos, las operaciones ejecutadas sobre los datos en las 12 consultas descritas en la Sección \ref{sec:procesamiento}. Todos los valores presentados aquí son idénticos en los cuatro frameworks.
+Esta sección detalla, con resultados concretos, las operaciones ejecutadas sobre los datos en las 12 consultas descritas en la Sección \ref{sec:procesamiento}. Los valores presentados aquí coinciden en los cuatro frameworks, con la única excepción de la segmentación de clientes (consulta 11), detallada más adelante en esta sección.
 
 \subsection{Operaciones tipo CRUD sobre el dataset}
 
@@ -138,7 +138,7 @@ Germany & 17{,}331 & 899 & 5.19\% \\
 
 \subsubsection*{Segmentación de clientes por gasto}
 
-Se segmentaron los 5{,}942 clientes únicos en tres tiers de gasto total (bajo, medio, alto) usando terciles, resultando en aproximadamente 1{,}960 clientes por tier, una distribución equilibrada, como corresponde a una segmentación por terciles.
+Se segmentaron los 5{,}942 clientes únicos en tres tiers de gasto total (bajo, medio, alto) usando terciles, resultando en una distribución equilibrada de alrededor de 1{,}960 clientes por tier. Esta es la única consulta donde los cuatro frameworks no coinciden exactamente. Dask, Modin y Spark ubican a 1{,}959 clientes en el tier Bajo y a 1{,}960 en el tier Medio, mientras que Polars ubica a 1{,}960 en Bajo y a 1{,}959 en Medio. La diferencia es un solo cliente, ubicado justo en el límite entre ambos tiers, y se debe a que cada framework calcula los puntos de corte del tercil con un método distinto: Dask aplica \texttt{pandas.qcut} sobre el resultado ya agregado, Modin usa el método equivalente de su propia API, Spark calcula los cuantiles de forma exacta con \texttt{approxQuantile} (\texttt{relativeError=0}), y Polars usa su propio \texttt{qcut}. Ninguno de los cuatro está mal. Simplemente no todos definen igual el punto donde termina un tercil y empieza el siguiente.
 
 \subsubsection*{Ticket promedio (AOV) global y su evolución}
 
