@@ -28,3 +28,6 @@ __pycache__/
 
 hadoop-mapreduce/work/*
 !hadoop-mapreduce/work/.gitkeep
+!hadoop-mapreduce/work/wordmean.txt
+!hadoop-mapreduce/work/wordmedian.txt
+!hadoop-mapreduce/work/secondarysort.txt
