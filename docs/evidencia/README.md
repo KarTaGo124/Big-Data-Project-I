@@ -28,3 +28,9 @@ Output completo (12 consultas cada uno) corriendo en el mismo clúster, leyendo 
 - `spark-cluster-output.txt` (confirmado corriendo como aplicación YARN real, no en modo local)
 
 Los 4 dan resultados numéricos idénticos entre sí (mismo AOV, mismos totales de limpieza/filtrado, mismo top 10 de clientes/productos).
+
+## Benchmark de rendimiento local (Sección 4.7 del informe)
+
+- `benchmark/polars-benchmark.json`, `benchmark/dask-benchmark.json`, `benchmark/modin-benchmark.json`, `benchmark/spark-benchmark.json` — salida cruda de `processing/run_benchmark.py` para cada framework: tiempo total, tiempo por consulta y memoria pico (RSS del proceso principal más sus procesos hijos).
+- Corrido en la misma máquina, una vez cada framework, en un entorno virtual aislado por framework (mismas versiones que en `processing/<framework>/requirements.txt`), leyendo el mismo `data/online_retail_II.csv` sin caché tibia entre corridas.
+- Máquina: Intel Core i7-13620H (10 núcleos / 16 hilos), 16 GB RAM, Windows 11 Pro.

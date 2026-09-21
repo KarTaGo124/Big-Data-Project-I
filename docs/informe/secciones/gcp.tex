@@ -3,9 +3,9 @@
 
 \subsection{Arquitectura general}
 
-La arquitectura del proyecto sigue el flujo estándar de un pipeline de Big Data: fuente de datos externa $\rightarrow$ ingesta batch $\rightarrow$ almacenamiento (data lake) $\rightarrow$ procesamiento distribuido, todo dentro de Google Cloud Platform. El dataset se carga una única vez a Cloud Storage (es un histórico cerrado, no un flujo continuo de eventos, por lo que la ingesta es batch y no streaming), y desde ahí lo consumen tanto los cuatro frameworks de procesamiento (Sección \ref{sec:procesamiento}) como el pipeline de Hadoop MapReduce (Sección \ref{sec:hadoop}).
+La arquitectura del proyecto sigue el flujo estándar de un pipeline de Big Data: primero la fuente de datos externa, luego la ingesta batch, después el almacenamiento (data lake) y finalmente el procesamiento distribuido, todo dentro de Google Cloud Platform. El dataset se carga una única vez a Cloud Storage (es un histórico cerrado, no un flujo continuo de eventos, por lo que la ingesta es batch y no streaming), y desde ahí lo consumen tanto los cuatro frameworks de procesamiento (Sección \ref{sec:procesamiento}) como el pipeline de Hadoop MapReduce (Sección \ref{sec:hadoop}).
 
-Toda la infraestructura, el bucket y el clúster, se define como código mediante Terraform (\texttt{terraform/main.tf}), lo que permite recrearla o destruirla de forma reproducible con un solo comando, sin pasos manuales en la consola.
+Toda la infraestructura, el bucket y el clúster, se define como código mediante Terraform (\url{terraform/main.tf}), lo que permite recrearla o destruirla de forma reproducible con un solo comando, sin pasos manuales en la consola.
 
 \subsection{Diseño de Arquitectura Big Data}
 
@@ -66,7 +66,7 @@ La arquitectura definida para el proyecto está basada por completo en GCP, e in
 \begin{table}[H]
 \centering
 \small
-\begin{tabular}{p{2.7cm}p{5cm}p{5cm}}
+\begin{tabular}{p{3.4cm}p{4.8cm}p{4.8cm}}
 \toprule
 \textbf{Componente} & \textbf{Qué es} & \textbf{Por qué está ahí} \\
 \midrule
@@ -89,7 +89,7 @@ Procesamiento distribuido & Clúster Dataproc (1 master + 2 workers) corriendo S
     \item \textbf{Un solo bucket:} cumple dos roles (staging del clúster y data lake del proyecto) organizados por carpetas, separarlo en dos buckets no aporta ningún beneficio funcional distinto para el tamaño de este proyecto.
     \item \textbf{Hardware del clúster:} \texttt{n4-standard-2} (2 vCPU, 8 GB RAM) $\times$ 3 nodos (1 master + 2 workers), con disco \texttt{hyperdisk-balanced} de 100 GB.
     \item \textbf{Batch, no streaming:} el dataset es un archivo histórico cerrado, no llegan registros nuevos en tiempo real.
-    \item \textbf{Terraform:} toda la infraestructura se define como código y se provisiona o destruye de forma reproducible, sin pasos manuales, ver \texttt{terraform/README.md}.
+    \item \textbf{Terraform:} toda la infraestructura se define como código y se provisiona o destruye de forma reproducible, sin pasos manuales, ver \url{terraform/README.md}.
 \end{itemize}
 
 \subsection{Almacenamiento: bucket de Cloud Storage}
@@ -168,4 +168,4 @@ Como respaldo de costos, se configuró un job de Cloud Scheduler que apaga el cl
 
 \subsection{Reproducibilidad con Terraform}
 
-Toda la infraestructura descrita en esta sección, bucket, clúster, service account de apagado automático y job de Cloud Scheduler, está definida en \texttt{terraform/main.tf}. Cualquier integrante del equipo puede levantar una copia idéntica de esta infraestructura en su propio proyecto de GCP corriendo \texttt{terraform apply}, y destruirla por completo con \texttt{terraform destroy}, sin dejar recursos huérfanos ni pasos manuales pendientes.
+Toda la infraestructura descrita en esta sección, bucket, clúster, service account de apagado automático y job de Cloud Scheduler, está definida en \url{terraform/main.tf}. Cualquier integrante del equipo puede levantar una copia idéntica de esta infraestructura en su propio proyecto de GCP corriendo \texttt{terraform apply}, y destruirla por completo con \texttt{terraform destroy}, sin dejar recursos huérfanos ni pasos manuales pendientes.
