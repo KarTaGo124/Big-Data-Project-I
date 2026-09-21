@@ -11,7 +11,7 @@ Aunque el dataset es un archivo estático (no una base de datos transaccional), 
     \item \textbf{Create:} se crean columnas derivadas que no existen en el CSV original: \texttt{TotalPrice} (\texttt{Quantity} $\times$ \texttt{Price}), \texttt{Year}, \texttt{Month} e \texttt{IsCancelled} (booleano, a partir del prefijo \texttt{C} en \texttt{Invoice}).
     \item \textbf{Read:} lectura del CSV completo con un esquema de tipos explícito por columna, para evitar inferencias erróneas de tipo.
     \item \textbf{Update:} \texttt{InvoiceDate} se convierte de texto a tipo fecha-hora real, habilitando operaciones temporales (\texttt{Year}, \texttt{Month}) que no son posibles sobre una columna de texto.
-    \item \textbf{Delete:} eliminación de filas duplicadas exactas y de filas que no representan ventas válidas (\texttt{Description} nula, \texttt{Price} $\leq$ 0, cancelaciones).
+    \item \textbf{Delete:} eliminación de filas duplicadas exactas y de filas que no representan ventas reales (\texttt{Description} nula, \texttt{Price} $\leq$ 0, o cancelaciones).
 \end{itemize}
 
 \subsection{Validación y limpieza}

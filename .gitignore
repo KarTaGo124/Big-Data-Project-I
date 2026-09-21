@@ -22,5 +22,9 @@ terraform.tfvars.json
 # macOS
 .DS_Store
 
+# Python
+__pycache__/
+*.pyc
+
 hadoop-mapreduce/work/*
 !hadoop-mapreduce/work/.gitkeep

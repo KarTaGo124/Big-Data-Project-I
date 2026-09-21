@@ -43,7 +43,22 @@ gcloud dataproc jobs submit hadoop \
   -- <programa> <input_hdfs> <output_hdfs>
 \end{verbatim}
 
-donde \texttt{<programa>} es \texttt{wordmean}, \texttt{wordmedian} o \texttt{secondarysort}, \texttt{<input\_hdfs>} es \texttt{/retail/descriptions.txt} o \texttt{/retail/customer\_quantity.txt} según corresponda, y \texttt{<output\_hdfs>} es \texttt{/retail/<programa>}.
+donde los tres parámetros toman los siguientes valores según el programa que se esté ejecutando:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lp{9cm}}
+\toprule
+\textbf{Parámetro} & \textbf{Valor} \\
+\midrule
+\texttt{<programa>} & \texttt{wordmean}, \texttt{wordmedian} o \texttt{secondarysort} \\
+\texttt{<input\_hdfs>} & \url{/retail/descriptions.txt} o \url{/retail/customer_quantity.txt}, según corresponda \\
+\texttt{<output\_hdfs>} & \texttt{/retail/<programa>} \\
+\bottomrule
+\end{tabular}
+\caption{Parámetros del comando de envío de jobs Hadoop}
+\end{table}
 
 El resultado de cada job (las particiones \texttt{part-r-00000}, \texttt{part-r-00001}, \ldots generadas por los \emph{reducers}) queda almacenado en HDFS, dentro del clúster, tal como exige el enunciado. Recién después, para poder explorarlo y conservarlo más allá de la vida del clúster, se juntan esas particiones en un solo archivo y se copian a Cloud Storage:
 
@@ -72,7 +87,7 @@ length  24485085
 
 Media = \texttt{length / count} $\approx$ 5.25 caracteres por palabra.
 
-\textbf{\texttt{wordmedian.txt}}: tabla de frecuencia (largo de palabra $\rightarrow$ cantidad de palabras de ese largo). La mediana se obtiene acumulando estos conteos, ordenados por largo, hasta llegar al 50\% del total de palabras.
+\textbf{\texttt{wordmedian.txt}}: tabla de frecuencia que relaciona el largo de palabra con la cantidad de palabras de ese largo. La mediana se obtiene acumulando estos conteos, ordenados por largo, hasta llegar al 50\% del total de palabras.
 
 \textbf{\texttt{secondarysort.txt}}: compras agrupadas por \texttt{Customer ID}, ordenadas ascendentemente por \texttt{Quantity} dentro de cada grupo (aproximadamente 7 MB de resultado). Por ejemplo, para el cliente \texttt{12348}:
 
@@ -85,4 +100,4 @@ Media = \texttt{length / count} $\approx$ 5.25 caracteres por palabra.
 ...
 \end{verbatim}
 
-Estos tres resultados fueron reproducidos de forma independiente sobre un clúster Dataproc real, obteniendo valores idénticos a los documentados originalmente por el equipo (ver \texttt{hadoop-mapreduce/README.md}), lo que confirma que el pipeline es completamente reproducible.
+Estos tres resultados fueron reproducidos de forma independiente sobre un clúster Dataproc real, obteniendo valores idénticos a los documentados originalmente por el equipo (ver \url{hadoop-mapreduce/README.md}), lo que confirma que el pipeline es completamente reproducible.
