@@ -116,7 +116,7 @@ Media = \texttt{length / count} $\approx$ 5.25 caracteres por palabra.
 
 Sumando estos conteos da exactamente 4{,}664{,}518 palabras, el mismo \texttt{count} de \texttt{wordmean.txt}, lo que confirma que ambos programas leyeron el mismo texto. La mitad de esa cantidad es 2{,}332{,}259: acumulando la tabla desde largo 1, se llega a 1{,}805{,}976 palabras hasta largo 4, y se pasa el 50\% recién al sumar el largo 5 (951{,}496 palabras más). Es decir, la mediana del largo de palabra es \textbf{5}, muy cerca de la media de 5.25 calculada arriba, y coincide con que largo 5 es también el bucket individual más grande de la tabla (casi 1 de cada 5 palabras del catálogo tiene 5 caracteres).
 
-\textbf{\texttt{secondarysort.txt}}: compras agrupadas por \texttt{Customer ID} (5{,}942 clientes, el mismo total que en la Sección \ref{sec:dataset}), ordenadas ascendentemente por \texttt{Quantity} dentro de cada grupo (830{,}306 líneas, $\sim$7 MB). Más allá del ordenamiento en sí, esto deja ver el patrón de compra de cada cliente. Por ejemplo, el cliente \texttt{12348} solo compra en cantidades que son múltiplos de 12 (una docena):
+\textbf{\texttt{secondarysort.txt}}: compras agrupadas por \texttt{Customer ID} (5{,}942 clientes, el mismo total que en la Sección \ref{sec:dataset}), ordenadas ascendentemente por \texttt{Quantity} dentro de cada grupo (830{,}306 líneas, $\sim$7 MB). Más allá del ordenamiento en sí, esto deja ver el patrón de compra de cada cliente. Por ejemplo, el cliente \texttt{12348} tiene 51 líneas en el archivo, con estas cantidades distintas:
 
 \begin{verbatim}
 12348   1
@@ -133,8 +133,12 @@ Sumando estos conteos da exactamente 4{,}664{,}518 palabras, el mismo \texttt{co
 12348   72
 ...
 12348   96
+...
+12348   120
+...
+12348   144
 \end{verbatim}
 
-Ese patrón, comprar sistemáticamente en docenas, es exactamente el comportamiento que se espera de un cliente mayorista (un negocio que revende, no una persona comprando para sí misma), consistente con lo ya señalado en la Sección \ref{sec:dataset}: el dataset está dominado por compras de otros negocios, no de consumidores finales. \texttt{secondarysort} permite ver esta clase de patrón por cliente sin tener que volver a leer el dataset completo, la agrupación y el orden secundario ya vienen resueltos por el propio job de MapReduce.
+De esas 51 compras, 44 (el 86\%) son múltiplos de 12, docenas, cuatro docenas, media gruesa, una gruesa, con solo 7 excepciones sueltas (cantidades de 1, 6, 20 y 80 unidades). Ese patrón dominante, comprar por docena y sus múltiplos, es consistente con un cliente mayorista (un negocio que revende, no una persona comprando para sí misma), en línea con lo ya señalado en la Sección \ref{sec:dataset}: el dataset está dominado por compras de otros negocios, no de consumidores finales. Las pocas compras sueltas podrían ser ajustes puntuales o pedidos de muestra, no cambian el patrón general. \texttt{secondarysort} permite ver esta clase de patrón por cliente sin tener que volver a leer el dataset completo, la agrupación y el orden secundario ya vienen resueltos por el propio job de MapReduce.
 
 Estos tres resultados fueron reproducidos de forma independiente sobre un clúster Dataproc real, y los tres archivos completos están versionados en \url{hadoop-mapreduce/work/} del repositorio.
