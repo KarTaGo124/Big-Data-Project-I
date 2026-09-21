@@ -79,16 +79,20 @@ La Figura \ref{fig:dataproc-jobs} muestra los tres jobs completados exitosamente
     \label{fig:dataproc-jobs}
 \end{figure}
 
-\textbf{\texttt{wordmean.txt}}: el programa no imprime la media directamente, sino los contadores con los que se calcula:
+\subsubsection*{\texttt{wordmean.txt}}
+
+El programa no imprime la media directamente, sino los contadores con los que se calcula:
 
 \begin{verbatim}
 count   4664518
 length  24485085
 \end{verbatim}
 
-Media = \texttt{length / count} $\approx$ 5.25 caracteres por palabra.
+Media = \texttt{length / count} $\approx$ 5.25 caracteres por palabra. El \texttt{count} de 4{,}664{,}518 es la cantidad total de palabras individuales en \texttt{descriptions.txt} (1{,}062{,}989 líneas, una por venta con descripción no nula), no la cantidad de líneas: en promedio, cada descripción de producto tiene $4{,}664{,}518 / 1{,}062{,}989 \approx 4.4$ palabras, algo esperable para descripciones cortas de catálogo como \texttt{WHITE HANGING HEART T-LIGHT HOLDER} o \texttt{JUMBO BAG RED RETROSPOT}.
 
-\textbf{\texttt{wordmedian.txt}}: a diferencia de \texttt{wordmean}, este programa sí entrega una tabla completa: para cada largo de palabra, cuántas palabras de ese largo aparecen en el catálogo. La Tabla \ref{tab:wordmedian} muestra el resultado completo, reordenado por largo (el archivo crudo sale desordenado porque el job usó 3 \emph{reducers} y cada uno escribió su propia partición).
+\subsubsection*{\texttt{wordmedian.txt}}
+
+A diferencia de \texttt{wordmean}, este programa sí entrega una tabla completa: para cada largo de palabra, cuántas palabras de ese largo aparecen en el catálogo. La Tabla \ref{tab:wordmedian} muestra el resultado completo, reordenado por largo (el archivo crudo sale desordenado porque el job usó 3 \emph{reducers} y cada uno escribió su propia partición).
 
 \begin{table}[H]
 \centering
@@ -116,7 +120,9 @@ Media = \texttt{length / count} $\approx$ 5.25 caracteres por palabra.
 
 Sumando estos conteos da exactamente 4{,}664{,}518 palabras, el mismo \texttt{count} de \texttt{wordmean.txt}, lo que confirma que ambos programas leyeron el mismo texto. La mitad de esa cantidad es 2{,}332{,}259: acumulando la tabla desde largo 1, se llega a 1{,}805{,}976 palabras hasta largo 4, y se pasa el 50\% recién al sumar el largo 5 (951{,}496 palabras más). Es decir, la mediana del largo de palabra es \textbf{5}, muy cerca de la media de 5.25 calculada arriba, y coincide con que largo 5 es también el bucket individual más grande de la tabla (casi 1 de cada 5 palabras del catálogo tiene 5 caracteres).
 
-\textbf{\texttt{secondarysort.txt}}: compras agrupadas por \texttt{Customer ID} (5{,}942 clientes, el mismo total que en la Sección \ref{sec:dataset}), ordenadas ascendentemente por \texttt{Quantity} dentro de cada grupo (830{,}306 líneas, $\sim$7 MB). Más allá del ordenamiento en sí, esto deja ver el patrón de compra de cada cliente. Por ejemplo, el cliente \texttt{12348} tiene 51 líneas en el archivo, con estas cantidades distintas:
+\subsubsection*{\texttt{secondarysort.txt}}
+
+Compras agrupadas por \texttt{Customer ID} (5{,}942 clientes, el mismo total que en la Sección \ref{sec:dataset}), ordenadas ascendentemente por \texttt{Quantity} dentro de cada grupo (830{,}306 líneas, $\sim$7 MB). Más allá del ordenamiento en sí, esto deja ver el patrón de compra de cada cliente. Por ejemplo, el cliente \texttt{12348} tiene 51 líneas en el archivo, con estas cantidades distintas:
 
 \begin{verbatim}
 12348   1
