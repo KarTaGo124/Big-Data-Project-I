@@ -14,9 +14,10 @@ Evidencia de que los 4 frameworks de procesamiento (Sección 4) y los 3 programa
 - `cluster-running.png` — clúster `dataproc-cluster` en estado "En ejecución"
 - `cluster-workers.png` — mismo clúster, confirmando 2 nodos trabajadores
 - `dataproc-jobs-completados.png` — los 3 jobs (`wordmean`, `wordmedian`, `secondarysort`) en estado "Completado"
-- `hadoop-wordmean.txt` — resultado real: `count 4664518`, `length 24485085` (idéntico a lo documentado en `hadoop-mapreduce/README.md`)
+- `hadoop-wordmean.txt` — resultado real: `count 4664518`, `length 24485085`
 - `hadoop-wordmedian.txt` — tabla de frecuencias real
-- (`secondarysort.txt`, ~7MB, no se duplica aquí — ya vive en `hadoop-mapreduce/work/`)
+
+Los tres resultados completos (`wordmean.txt`, `wordmedian.txt`, `secondarysort.txt`) están versionados en `hadoop-mapreduce/work/`.
 
 ## Procesamiento distribuido — 4 frameworks (Sección 4)
 
