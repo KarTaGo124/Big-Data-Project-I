@@ -149,7 +149,7 @@ Spark (local) & 134.44 & 1{,}511 \\
 \label{tab:benchmark-total}
 \end{table}
 
-Polars resultó, por lejos, el más rápido y uno de los más livianos: al ser una librería de una sola máquina optimizada en Rust, sin overhead de coordinación entre procesos, no tiene que pagar ningún costo de inicialización. Dask queda en un punto intermedio. Modin usa más memoria que los demás porque Ray reserva por adelantado un object store compartido para su motor de ejecución, un costo fijo que se paga incluso para un dataset de este tamaño. Spark en modo local es, de los cuatro, el más lento: paga el costo de levantar una JVM completa y de armar un plan de ejecución distribuido pensado para clústers de muchos nodos, un costo que no se amortiza corriendo en una sola máquina con un dataset de $\sim$1 millón de filas; su ventaja real se ve en la Sección \ref{sec:gcp-cluster-run}, corriendo distribuido sobre el clúster.
+Polars resultó, por lejos, el más rápido y uno de los más livianos: al ser una librería de una sola máquina optimizada en Rust, sin overhead de coordinación entre procesos, no tiene que pagar ningún costo de inicialización. Dask queda en un punto intermedio. Modin usa más memoria que los demás porque Ray reserva por adelantado un object store compartido para su motor de ejecución, un costo fijo que se paga incluso para un dataset de este tamaño. Spark en modo local es, de los cuatro, el más lento: paga el costo de levantar una JVM completa y de armar un plan de ejecución distribuido pensado para clústers de muchos nodos, un costo que no se amortiza corriendo en una sola máquina con un dataset de $\sim$1 millón de filas.
 
 La Tabla \ref{tab:benchmark-etapas} desglosa el tiempo por etapa, para ver en qué parte del pipeline se concentra el costo de cada framework.
 
@@ -181,3 +181,25 @@ Carga del CSV & 0.05 & 0.01 & 10.43 & 0.63 \\
 \end{table}
 
 Algunos patrones se explican directamente por cómo trabaja cada motor. En Modin, la carga del CSV concentra la mayor parte del tiempo total porque ahí es cuando Ray arranca su instancia local, el resto de las consultas son rápidas una vez que el motor ya está en pie. En Dask, en cambio, el costo se concentra en las etapas 1 a 3: como es perezoso, esas etapas son las primeras en forzar una lectura real del CSV completo, las consultas de negocio posteriores reutilizan los datos ya materializados con \texttt{.persist()} y por eso son casi instantáneas. En Spark local, las consultas 5, 6, 7, 8, 11 y 12 son las más caras porque cada una dispara una acción (\texttt{show()} o \texttt{first()}) que fuerza a la JVM a planificar y ejecutar desde cero sobre el DataFrame cacheado, el overhead de planificación de Spark pesa más que el trabajo real cuando el dataset cabe cómodo en memoria de una sola máquina.
+
+\subsubsection*{El mismo benchmark, corrido en el clúster Dataproc}
+
+El benchmark local de arriba compara los 4 frameworks bajo las mismas condiciones, pero deliberadamente deja fuera el escenario donde Spark debería tener ventaja: repartido entre nodos reales. Para no dejar esa comparación solo como advertencia en el texto, se corrió el mismo \url{processing/run_benchmark.py} directamente en el nodo master del clúster (\texttt{n4-standard-2}, 2 vCPU, 8 GB RAM) para Polars, Dask y Modin, y para Spark se envió como job real de YARN (\texttt{gcloud dataproc jobs submit pyspark}), repartido entre el master y los 2 workers, en vez de correrlo como proceso local. La salida cruda de las 4 corridas está en \texttt{docs/evidencia/benchmark/*-cluster.json}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrl}
+\toprule
+\textbf{Framework} & \textbf{Tiempo total (s)} & \textbf{Dónde corrió} \\
+\midrule
+Polars & 1.76 & nodo master (proceso local) \\
+Dask & 11.25 & nodo master (proceso local) \\
+Modin & 12.40 & nodo master (proceso local) \\
+Spark & 170.65 & job de YARN, 3 nodos \\
+\bottomrule
+\end{tabular}
+\caption{Tiempo total del mismo pipeline, corrido en el clúster de Dataproc de prueba}
+\label{tab:benchmark-cluster}
+\end{table}
+
+El resultado es honesto pero no el esperado: Spark corriendo distribuido en YARN (170.65 s) resultó más lento que corriendo en modo local en la laptop (134.44 s), no más rápido. Esto no contradice lo dicho en la Sección \ref{sec:gcp-cluster-run} sobre que Spark es el único que reparte trabajo entre nodos, solo confirma algo distinto: para un dataset de $\sim$1 millón de filas, en un clúster de prueba con máquinas modestas (\texttt{n4-standard-2}, 2 vCPU cada una), el overhead de coordinar tareas y mover datos entre 3 nodos por red pesa más que el beneficio de paralelizar el trabajo. Ese overhead se amortiza con datasets mucho más grandes o clústers con más núcleos por nodo, no con este volumen de datos ni este hardware. Polars, Dask y Modin, al no distribuirse entre nodos ni en el clúster ni en local, simplemente corren más lento en el master del clúster que en la laptop porque el master tiene menos núcleos y memoria (2 vCPU / 8 GB frente a 10 núcleos / 16 GB).
