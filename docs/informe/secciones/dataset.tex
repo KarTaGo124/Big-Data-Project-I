@@ -66,7 +66,7 @@ El rango temporal cubierto va de 2009-12-01 a 2011-12-09.
 
 Estos hallazgos justifican directamente la Sección 4 del proyecto: casi un cuarto de las filas no tiene cliente asociado, un 3.22\% del dataset son filas duplicadas exactas, y hay filas con precio negativo o cero que no representan ventas reales. Todo esto se trata explícitamente en las 12 consultas implementadas por cada framework (ver Sección \ref{sec:procesamiento}).
 
-Los 34{,}335 duplicados de la tabla anterior se calculan sobre el archivo crudo, antes de cualquier limpieza. En el pipeline de las 12 consultas, la deduplicación (consulta 2) corre después de la limpieza inicial (consulta 1), que ya descarta las filas con \texttt{Description} nula o \texttt{Price} $\leq$ 0. Como el conjunto sobre el que se cuentan los duplicados ya es distinto, el número de duplicados eliminados en esa etapa del pipeline es 34{,}147 y no 34{,}335 (ver Sección \ref{sec:operaciones}); ambas cifras son correctas, cada una sobre un conjunto de datos distinto.
+Los 34{,}335 duplicados de la tabla anterior se calculan sobre el archivo crudo, antes de cualquier limpieza. En el pipeline de las 12 consultas, la deduplicación (consulta 2) corre después de la limpieza inicial (consulta 1), que ya descarta las filas con \texttt{Description} nula o \texttt{Price} $\leq$ 0. Como el conjunto sobre el que se cuentan los duplicados ya es distinto, el número de duplicados eliminados en esa etapa del pipeline es 34{,}147 y no 34{,}335 (ver Sección \ref{sec:operaciones}), ambas cifras son correctas, cada una sobre un conjunto de datos distinto.
 
 \subsection{Métricas de negocio (vista preliminar)}
 
