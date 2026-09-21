@@ -180,26 +180,4 @@ Carga del CSV & 0.41 & 0.02 & 5.15 & 2.86 \\
 \label{tab:benchmark-etapas-cluster}
 \end{table}
 
-La etapa 4 (Filtrado) es la más reveladora: en Spark salta a 32.45 s, muy por encima de las demás etapas, porque ahí es donde el código llama a \texttt{.cache()} sobre \texttt{validas} por primera vez, lo que fuerza a materializar y mover datos entre los 2 executors distribuidos en los workers, el costo real de la distribución aparece exactamente ahí, en el shuffle de red entre nodos. Las consultas 5, 6, 7, 8, 11 y 12 también son caras en Spark porque cada una dispara una acción distribuida nueva sobre ese DataFrame ya cacheado. Polars, Dask y Modin, al no repartirse entre nodos, simplemente corren más lento en el master del clúster que en una laptop moderna porque el master es una máquina más chica (2 vCPU / 8 GB).
-
-\subsubsection*{Referencia: el mismo benchmark en una máquina controlada}
-
-Como complemento, y solo para aislar qué parte de los tiempos de arriba se debe al framework en sí y cuál al hardware modesto del clúster de prueba, se corrió el mismo benchmark también en una sola máquina de referencia (Intel Core i7-13620H, 10 núcleos / 16 hilos, 16 GB RAM), con las 4 en un entorno virtual aislado por framework. Esta corrida no reemplaza la comparación de arriba, GCP es la plataforma del proyecto y esa es la comparación que cuenta, sirve únicamente para separar el efecto del framework del efecto de la máquina. La salida cruda está en \texttt{docs/evidencia/benchmark/*.json} (sin sufijo \texttt{-cluster}).
-
-\begin{table}[H]
-\centering
-\begin{tabular}{lrr}
-\toprule
-\textbf{Framework} & \textbf{Tiempo total (s)} & \textbf{Memoria pico (MB)} \\
-\midrule
-Polars & 0.78 & 915 \\
-Dask & 10.35 & 731 \\
-Modin & 16.45 & 5{,}937 \\
-Spark (local, sin distribuir) & 134.44 & 1{,}511 \\
-\bottomrule
-\end{tabular}
-\caption{Tiempo total y memoria pico del mismo pipeline, corrido en una máquina de referencia}
-\label{tab:benchmark-total}
-\end{table}
-
-El orden relativo entre Polars, Dask y Modin es el mismo en ambos entornos, lo que confirma que ese orden es una propiedad de cada framework y no un artefacto del hardware. Spark es el caso distinto: en la máquina de referencia, sin distribuirse, ya es el más lento de los cuatro (134.44 s) por el costo fijo de levantar una JVM y planificar un plan de ejecución pensado para clústers grandes, y en el clúster real ese costo se suma al overhead de red entre nodos, empeorando aún más (170.65 s). En ningún escenario probado, con este dataset y este hardware, Spark termina siendo la opción más rápida, algo que solo se puede afirmar habiendo medido las dos situaciones, no una sola.
+La etapa 4 (Filtrado) es la más reveladora: en Spark salta a 32.45 s, muy por encima de las demás etapas, porque ahí es donde el código llama a \texttt{.cache()} sobre \texttt{validas} por primera vez, lo que fuerza a materializar y mover datos entre los 2 executors distribuidos en los workers, el costo real de la distribución aparece exactamente ahí, en el shuffle de red entre nodos. Las consultas 5, 6, 7, 8, 11 y 12 también son caras en Spark porque cada una dispara una acción distribuida nueva sobre ese DataFrame ya cacheado. Polars, Dask y Modin, al no repartirse entre nodos, quedan limitados a los 2 vCPU / 8 GB del nodo master, muy por debajo de lo que tendrían disponible si se distribuyeran entre los 3 nodos del clúster.
