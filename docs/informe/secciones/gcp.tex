@@ -148,7 +148,7 @@ Se optó por Cloud Storage en vez de, por ejemplo, disco local del clúster, por
 
 El clúster se aprovisionó en modo \emph{Standard}: 1 nodo master + 2 nodos worker, todos \texttt{n4-standard-2} (2 vCPU, 8 GB RAM) con disco \texttt{hyperdisk-balanced} de 100 GB. Dataproc administra de forma nativa Spark, Hadoop y HDFS sobre este clúster, con el conector a Cloud Storage ya configurado.
 
-Por seguridad, el clúster no tiene IP pública (\texttt{internal\_ip\_only = true}): el acceso es exclusivamente por SSH vía IAP tunneling o por el Component Gateway (JupyterLab, Spark History Server), nunca por una IP directa. Para que el clúster tenga salida a internet (necesaria para instalar dependencias de Python o clonar el repositorio) sin exponer una IP pública, se agregó un Cloud NAT (Cloud Router + Cloud NAT), que permite tráfico saliente sin aceptar ninguna conexión entrante.
+El clúster tiene IP pública, lo que le da salida directa a internet (necesaria para instalar dependencias de Python o clonar el repositorio) y permite conectarse por SSH o por el Component Gateway (JupyterLab, Spark History Server) sin configuración de red adicional.
 
 Como respaldo de costos, se configuró un job de Cloud Scheduler que apaga el clúster automáticamente todos los días a una hora fija, por si el equipo olvida apagarlo manualmente.
 

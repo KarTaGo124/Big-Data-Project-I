@@ -37,7 +37,7 @@ Sobre el mismo clúster de Dataproc se ejecutaron tres programas de `hadoop-mapr
 - `notebooks/`: exploración inicial del dataset (calidad de datos, nulos, duplicados, métricas preliminares).
 - `processing/`: implementación de las 12 consultas en Polars, Dask, Modin y Spark, más el script de benchmark.
 - `hadoop-mapreduce/`: scripts para preparar los inputs, correr los tres programas de Hadoop en Dataproc y descargar los resultados.
-- `terraform/`: infraestructura de GCP como código (bucket, clúster Dataproc, Cloud NAT, apagado automático).
+- `terraform/`: infraestructura de GCP como código (bucket, clúster Dataproc, apagado automático).
 
 ## Cómo reproducir el proyecto
 
